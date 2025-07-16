@@ -21,13 +21,15 @@ app.use((req, res, next) => {
 });*/
 
 app.post('/api/gpt', async (req, res) => {
-  const { prompt, npcName, model = 'gpt-4o' } = req.body;
+  const { prompt, npcName, model = 'gpt-4o', systemPrompt } = req.body;
 
   if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
 
-  const systemPrompt = npcName
-    ? `You are roleplaying as ${npcName}. Stay in character unless asked for out-of-character details.`
-    : "You are ArchiveOfVoices, a helpful assistant for tabletop roleplaying games.";
+  const usedSystemPrompt = systemPrompt || (
+    npcName
+      ? `You are roleplaying as ${npcName}. Stay in character unless asked for out-of-character details.`
+      : "You are ArchiveOfVoices, a helpful assistant for tabletop roleplaying games."
+  );
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -39,7 +41,7 @@ app.post('/api/gpt', async (req, res) => {
       body: JSON.stringify({
         model,
         messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: usedSystemPrompt },
           { role: 'user', content: prompt },
         ],
         temperature: 0.7,
